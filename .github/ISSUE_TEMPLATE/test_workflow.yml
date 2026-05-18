@@ -6,7 +6,21 @@ body:
   - type: markdown
     attributes:
       value: |
-        Use this form to automatically append a new row to a `test.tsv` file.
+        Use this form to automatically append a new row to a `.tsv` file.
+
+        **Existing file**: type an existing path to append new data.
+        **New file**: type a new path to create it.
+  - type: input
+    id: target_file
+    attributes:
+      label: Target Curation File
+      description: |
+        Relative path to the target `.tsv` file in the repository.
+        Examples:
+          - `Scripts/PlantSEED_v3/Curation/seaver/test.tsv`
+          - `Scripts/PlantSEED_v3/Curation/pelle283/Glucosinolates/NewStep.tsv`
+    validations:
+      required: true
   - type: input
     id: entity
     attributes:

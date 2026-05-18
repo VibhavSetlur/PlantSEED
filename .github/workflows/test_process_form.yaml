@@ -31,34 +31,49 @@ jobs:
               match = re.search(r"### " + header + r"\n+(.*?)\n+(?:###|$)", body, re.DOTALL)
               return match.group(1).strip() if match else None
 
-          # Map the exact headers from your Issue Form
-          entity = get_field("Entity Name / Pathway")
-          action = get_field("Action")
-          data_type = get_field("Data Type")
-          value = get_field("Value")
+          # Parse all fields from the issue form
+          target_file = get_field("Target Curation File")
+          entity      = get_field("Entity Name / Pathway")
+          action      = get_field("Action")
+          data_type   = get_field("Data Type")
+          value       = get_field("Value")
 
+          # --- Validation ---
+          errors = []
+          if not target_file:
+              errors.append("Target Curation File is required.")
+          elif target_file.startswith("/"):
+              errors.append("Target Curation File must be a relative path (no leading /).")
+          elif not target_file.endswith(".tsv"):
+              errors.append("Target Curation File must end in .tsv")
+          elif ".." in target_file.split("/"):
+              errors.append("Path traversal (..) is not allowed.")
           if not all([entity, action, data_type, value]):
-              print("Error: Could not parse all required fields from the issue.")
+              errors.append("All fields (Entity, Action, Data Type, Value) are required.")
+
+          if errors:
+              for e in errors:
+                  print(f"Error: {e}")
               sys.exit(1)
 
-          # Define target file
-          target_dir = "Curation/seaver/"
-          target_file = f"{target_dir}/test.tsv"
-
-          # Ensure the directory exists
+          # --- Append to target file ---
+          target_dir = os.path.dirname(target_file)
           os.makedirs(target_dir, exist_ok=True)
 
-          # Append the parsed values as a tab-separated row
           with open(target_file, "a") as f:
               f.write(f"{entity}\t{action}\t{data_type}\t{value}\n")
+
+          # --- Export target file path for subsequent steps ---
+          with open(os.environ["GITHUB_ENV"], "a") as env_file:
+              env_file.write(f"TARGET_FILE={target_file}\n")
           '
 
       - name: Commit and Push Changes
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          
-          git add Curation/seaver/test.tsv
+
+          git add "$TARGET_FILE"
           git commit -m "curation: add data from issue #${{ github.event.issue.number }}"
           git push
 
@@ -66,5 +81,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} --body "✅ Successfully parsed and added to `test.tsv`. Closing issue."
+          gh issue comment ${{ github.event.issue.number }} --body "Successfully parsed and added to \`$TARGET_FILE\`. Closing issue."
           gh issue close ${{ github.event.issue.number }} --reason "completed"
