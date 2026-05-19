@@ -10,8 +10,9 @@ jobs:
     if: contains(github.event.issue.labels.*.name, 'curation')
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Needed to push commits
-      issues: write    # Needed to close the issue/add comments
+      contents: write    # Needed to push commits
+      issues: write      # Needed to close the issue/add comments
+      pull-requests: write  # Needed to create pull requests
 
     steps:
       - name: Checkout Repository
