@@ -270,7 +270,7 @@ jobs:
           body = os.environ["ISSUE_BODY"]
 
           def get_field(header):
-              match = re.search(r"### " + header + r"\n+(.*?)\n+(?:###|$)", body, re.DOTALL)
+              match = re.search(r"### " + header + r"\n+(.*?)(?:\n+(?:###|$)|\n*$)", body, re.DOTALL)
               return match.group(1).strip() if match else None
 
           # Parse all fields
