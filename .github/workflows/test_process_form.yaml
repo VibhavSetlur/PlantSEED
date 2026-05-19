@@ -92,12 +92,10 @@ jobs:
             --field title="Curation: ${{ github.event.issue.title }}" \
             --field head="$BRANCH_NAME" \
             --field base="${{ github.event.repository.default_branch }}" \
-            --field body="Automated curation update from issue #${{ github.event.issue.number }}."
+            --field body="Automated curation update from issue #${{ github.event.issue.number }}. Closes #${{ github.event.issue.number }}."
 
-      - name: Comment and Close Issue
+      - name: Comment on Issue (Do Not Close)
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          BRANCH_NAME: curation/issue-${{ github.event.issue.number }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} --body "Curation data added on branch \`$BRANCH_NAME\`. Pull request created for review. Closing issue."
-          gh issue close ${{ github.event.issue.number }} --reason "completed"
+          gh issue comment ${{ github.event.issue.number }} --body "Curation data added on branch \`curation/issue-${{ github.event.issue.number }}\". Pull request created. Issue will close automatically when the PR is merged."
