@@ -16,15 +16,19 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
 
       - name: Parse Issue and Append to TSV
         env:
           ISSUE_BODY: ${{ github.event.issue.body }}
+          BRANCH_NAME: curation/issue-${{ github.event.issue.number }}
         run: |
           python3 -c '
           import os, re, sys
 
           body = os.environ["ISSUE_BODY"]
+          branch = os.environ["BRANCH_NAME"]
 
           # Helper function to extract text below a Markdown header
           def get_field(header):
@@ -63,23 +67,37 @@ jobs:
           with open(target_file, "a") as f:
               f.write(f"{entity}\t{action}\t{data_type}\t{value}\n")
 
-          # --- Export target file path for subsequent steps ---
+          # --- Export values for subsequent steps ---
           with open(os.environ["GITHUB_ENV"], "a") as env_file:
               env_file.write(f"TARGET_FILE={target_file}\n")
+              env_file.write(f"BRANCH_NAME={branch}\n")
           '
 
-      - name: Commit and Push Changes
+      - name: Commit and Push to New Branch
         run: |
           git config --global user.name "github-actions[bot]"
           git config --global user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
+          git checkout -b "$BRANCH_NAME"
           git add "$TARGET_FILE"
           git commit -m "curation: add data from issue #${{ github.event.issue.number }}"
-          git push
+          git push origin "$BRANCH_NAME"
+
+      - name: Create Pull Request
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh pr create \
+            --base "${{ github.event.repository.default_branch }}" \
+            --head "$BRANCH_NAME" \
+            --title "Curation: ${{ github.event.issue.title }}" \
+            --body "Automated curation update from issue #${{ github.event.issue.number }}." \
+            --label "curation"
 
       - name: Comment and Close Issue
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          BRANCH_NAME: curation/issue-${{ github.event.issue.number }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} --body "Successfully parsed and added to \`$TARGET_FILE\`. Closing issue."
+          gh issue comment ${{ github.event.issue.number }} --body "Curation data added on branch \`$BRANCH_NAME\`. Pull request created for review. Closing issue."
           gh issue close ${{ github.event.issue.number }} --reason "completed"
