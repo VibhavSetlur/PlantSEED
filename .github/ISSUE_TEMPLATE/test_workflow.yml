@@ -1,6 +1,5 @@
 name: Curation Update
 description: Add or update features and publications
-title: "[Curation] "
 labels: ["curation"]
 body:
   - type: markdown
@@ -46,10 +45,16 @@ body:
         - publications
     validations:
       required: true
-  - type: input
+  - type: textarea
     id: value
     attributes:
-      label: Value
-      description: e.g., Athaliana_TAIR10||AT4G30530 or 10.1038/nchembio.185
+      label: Value(s)
+      description: |
+        One per line. Examples:
+          - Athaliana_TAIR10||AT4G30530
+          - 10.1038/nchembio.185
+      placeholder: |
+        Athaliana_TAIR10||AT4G30530
+        10.1038/nchembio.185
     validations:
       required: true

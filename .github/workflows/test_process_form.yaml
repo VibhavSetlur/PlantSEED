@@ -61,17 +61,20 @@ jobs:
                   print(f"Error: {e}")
               sys.exit(1)
 
-          # --- Append to target file ---
+          # --- Append to target file (one row per value line) ---
           target_dir = os.path.dirname(target_file)
           os.makedirs(target_dir, exist_ok=True)
 
+          values = [v.strip() for v in value.split("\n") if v.strip()]
           with open(target_file, "a") as f:
-              f.write(f"{entity}\t{action}\t{data_type}\t{value}\n")
+              for v in values:
+                  f.write(f"{entity}\t{action}\t{data_type}\t{v}\n")
 
           # --- Export values for subsequent steps ---
           with open(os.environ["GITHUB_ENV"], "a") as env_file:
               env_file.write(f"TARGET_FILE={target_file}\n")
               env_file.write(f"BRANCH_NAME={branch}\n")
+              env_file.write(f"ROW_COUNT={len(values)}\n")
           '
 
       - name: Commit and Push to New Branch
@@ -81,7 +84,7 @@ jobs:
 
           git checkout -b "$BRANCH_NAME"
           git add "$TARGET_FILE"
-          git commit -m "curation: add data from issue #${{ github.event.issue.number }}"
+          git commit -m "curation: add $ROW_COUNT row(s) from issue #${{ github.event.issue.number }}"
           git push origin "$BRANCH_NAME"
 
       - name: Create Pull Request
@@ -98,4 +101,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh issue comment ${{ github.event.issue.number }} --body "Curation data added on branch \`curation/issue-${{ github.event.issue.number }}\". Pull request created. Issue will close automatically when the PR is merged."
+          gh issue comment ${{ github.event.issue.number }} --body "Added $ROW_COUNT row(s) to \`$TARGET_FILE\` on branch \`curation/issue-${{ github.event.issue.number }}\". Pull request created. Issue will close automatically when the PR is merged."

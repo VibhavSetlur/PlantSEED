@@ -68,13 +68,23 @@ def main():
     while data_type not in ("features", "publications"):
         data_type = input("Enter features or publications: ").lower().strip()
 
-    value = prompt_required("Value: ")
+    print("Enter value(s), one per line. Blank line to finish:")
+    values = []
+    while True:
+        v = input().strip()
+        if not v:
+            break
+        values.append(v)
+    if not values:
+        print("At least one value is required.")
+        sys.exit(1)
+
     target = prompt_required("Target file path (e.g. Scripts/PlantSEED_v3/Curation/<user>/<path>/<file>.tsv): ")
 
-    line = f"{entity}\t{action}\t{data_type}\t{value}"
     print("\n" + "=" * 60)
-    print("TSV line to append:")
-    print(line)
+    print(f"{len(values)} TSV row(s) to append:")
+    for v in values:
+        print(f"{entity}\t{action}\t{data_type}\t{v}")
     print(f"\nTarget file: {target}")
     print("=" * 60)
 
