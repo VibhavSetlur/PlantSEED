@@ -16,8 +16,8 @@ body:
       description: |
         Relative path to the target `.tsv` file in the repository.
         Examples:
-          - `Scripts/PlantSEED_v3/Curation/seaver/test.tsv`
-          - `Scripts/PlantSEED_v3/Curation/pelle283/Glucosinolates/NewStep.tsv`
+          - `Scripts/PlantSEED_v3/Curation/Curators/seaver/test.tsv`
+          - `Scripts/PlantSEED_v3/Curation/Curators/pelle283/Glucosinolates/NewStep.tsv`
     validations:
       required: true
   - type: input
